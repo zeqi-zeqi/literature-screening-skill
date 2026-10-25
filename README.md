@@ -1,30 +1,109 @@
-# Literature Screening Agent Skill
+# 专门做给叶医生的文献筛选 Skill
 
-A provider-neutral Agent Skill for auditable title-and-abstract screening. It supports configurable criteria and labels, one- or two-pass review, disagreement adjudication, checkpoints, exact-record export, and validation.
+这是为叶医生定制的标题—摘要文献筛选工作流，用于系统评价、范围综述、快速综述及其他需要批量初筛的研究任务。
 
-The model must read each title and abstract. Scripts only parse, batch, validate, and export; they never decide semantic eligibility.
+它不预设某个固定医学主题。每次筛选时，由叶医生提供本次研究问题、纳入与排除标准、分类标签、优先级和不确定性处理原则。
 
-## Install for DeepSeek Harness
+## 它如何工作
 
-From the review project root:
-
-```powershell
-New-Item -ItemType Directory -Force .agents\skills
-git clone https://github.com/zeqi-zeqi/literature-screening-skill.git .agents\skills\literature-screening
+```text
+叶医生提供筛选标准
+        ↓
+AI逐篇阅读标题和摘要
+        ↓
+保存每篇的证据、标签、理由和不确定性
+        ↓
+可选的第二遍独立筛选与分歧裁决
+        ↓
+程序检查遗漏、重复和格式
+        ↓
+按原始记录导出分类文件和统计报告
 ```
 
-Start `dsh`, choose the workspace, and invoke:
+AI负责理解文献和作出语义判断；配套脚本只负责解析、编号、批次、检查点、验证和导出，不能通过关键词或规则直接决定最终分类。
+
+## 主要能力
+
+- 支持自定义研究问题、纳入标准和排除标准。
+- 支持自定义唯一分类标签及标签优先级。
+- 支持单遍筛选或两遍独立筛选。
+- 支持对标签分歧、不确定记录及可能纳入记录进行重新裁决。
+- 每篇保存简短、具体、可审计的判断依据。
+- 按固定ID和批次工作，支持中断后继续。
+- 检查遗漏ID、重复ID、非法标签和不完整批次。
+- 保持原始记录顺序，并尽量按原始字节块导出。
+- 对RIS文件检查 `TY  -`、`ER  -`、BOM和记录数量。
+- 区分普通摘要TXT与可导入EndNote的标准RIS，避免生成无法导入的伪RIS文件。
+
+## 核心原则
+
+1. 每篇文献必须由AI完整阅读标题和可用摘要后分类。
+2. 关键词、正则、脚本、嵌入相似度或简单投票不能决定最终标签。
+3. 当前任务的标准始终优先，不擅自沿用旧项目的筛选条件。
+4. 不得自行增加更严格的要求，例如用户没有要求时强制真实世界部署。
+5. 第二遍筛选完成前不得读取第一遍的标签和理由。
+6. 分歧裁决必须重新阅读原始标题摘要，不能机械服从任意一遍。
+7. 原始文献文件保持只读，不改写引文、摘要、标点或换行。
+8. 导出前必须验证记录总数、唯一性、原始顺序和格式完整性。
+
+## 叶医生每次需要提供什么
+
+- 待筛选的RIS、EndNote导出文件或结构清晰的TXT。
+- 本次研究问题或研究主题。
+- 纳入标准与排除标准。
+- 唯一分类标签及优先级。
+- 一遍或两遍筛选。
+- 每批文献数量。
+- 信息不足时从宽纳入还是从严排除。
+- 是否允许在摘要缺失或信息矛盾时查询补充资料。
+- 最终需要的文件格式和统计内容。
+
+## 使用方式
+
+在包含文献文件的工作区中调用：
 
 ```text
 /literature-screening
 ```
 
-Copy `assets/screening-config.example.json` into the review project, rename it `screening-config.json`, and replace the example criteria and labels.
+然后提供任务要求，例如：
 
-## Requirements
+```text
+请筛选当前目录中的 references.ris。
 
-- An Agent Skills-compatible host with file access.
-- Node.js for the optional deterministic helper. The helper uses no third-party packages.
-- A model/API configured in the host. API credentials must not be committed to the repository or screening project.
+研究问题：……
 
-See `references/dsh-setup.md` for paths and updating guidance.
+纳入标准：
+1. ……
+2. ……
+
+排除标签及优先级：
+1. Review
+2. Protocol
+3. 对象不符合
+4. 干预不符合
+5. 初筛合格
+
+采用两遍独立标题摘要筛选，每批50篇。
+信息不足但可能符合时从宽纳入。
+不要进行全文筛选。
+最终导出分类RIS和简洁统计报告。
+```
+
+如果要求严格的两遍独立筛选，建议分别使用三个独立会话完成第一遍、第二遍和分歧裁决。
+
+## 项目文件
+
+- `SKILL.md`：AI必须遵循的核心筛选工作流。
+- `references/task-config-schema.md`：每次任务的配置规范。
+- `references/audit-schema.md`：筛选结果和检查点格式。
+- `scripts/screening_tools.mjs`：零第三方依赖的解析、验证和导出工具。
+- `assets/screening-config.example.json`：可复制修改的任务配置模板。
+- `tests/smoke-test.mjs`：RIS解析和导出的冒烟测试。
+
+## 隐私与安全
+
+- 不要把API密钥写入配置文件、日志或Git仓库。
+- 使用在线模型时，标题和摘要会发送给相应API服务商，应遵守研究数据和机构隐私要求。
+- 在执行外部下载、覆盖既有结果或修改筛选标准前，应由用户明确授权。
+
