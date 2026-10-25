@@ -1,0 +1,7 @@
+interface:
+  display_name: "Literature Screening"
+  short_description: "Auditable screening with configurable review criteria"
+  default_prompt: "Use $literature-screening to screen a bibliographic export with my criteria and preserve an auditable checkpointed workflow."
+
+policy:
+  allow_implicit_invocation: true

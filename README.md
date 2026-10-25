@@ -28,4 +28,3 @@ Copy `assets/screening-config.example.json` into the review project, rename it `
 - A model/API configured in the host. API credentials must not be committed to the repository or screening project.
 
 See `references/dsh-setup.md` for paths and updating guidance.
-

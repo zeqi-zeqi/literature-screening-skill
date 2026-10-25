@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "source_format": "auto",
+  "mode": "double_independent",
+  "batch_size": 50,
+  "criteria": {
+    "review_question": "Replace with the current review question.",
+    "inclusion": ["Replace with an inclusion criterion."],
+    "exclusion": ["Replace with an exclusion criterion."],
+    "uncertainty_policy": "liberal_include"
+  },
+  "labels": [
+    {"name": "Include", "description": "Meets the configured title-and-abstract screening criteria."},
+    {"name": "Exclude", "description": "Does not meet the configured title-and-abstract screening criteria."}
+  ],
+  "label_priority": ["Exclude", "Include"],
+  "evidence_fields": [
+    "population_or_setting",
+    "intervention_or_exposure",
+    "care_or_topic_context",
+    "study_type_and_outcomes"
+  ],
+  "adjudication": {
+    "enabled": true,
+    "triggers": ["label_disagreement", "any_uncertain", "any_include"]
+  },
+  "output": {
+    "directory": "output",
+    "extension": "source",
+    "utf8_bom": "preserve"
+  }
+}
